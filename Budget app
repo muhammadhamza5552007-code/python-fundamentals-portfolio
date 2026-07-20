@@ -1,0 +1,53 @@
+def create_spend_chart(categories):
+    # Calculate total spent per category
+    total_spent = {}
+    for category in categories:
+        total = 0
+        for item in category.ledger:
+            if item["amount"] < 0:
+                total += abs(item["amount"])
+        total_spent[category.name] = total
+
+    total_all = sum(total_spent.values())
+    if total_all == 0:
+        percentages = {cat.name: 0 for cat in categories}
+    else:
+        percentages = {
+            cat.name: int((total_spent[cat.name] / total_all) * 100)
+            for cat in categories
+        }
+
+    # Round down to nearest 10
+    for name in percentages:
+        percentages[name] = (percentages[name] // 10) * 10
+
+    # Build chart
+    max_name_len = max(len(cat.name) for cat in categories)
+    chart_lines = ["Percentage spent by category"]
+
+    # Y-axis and bars (100 down to 0)
+    for i in range(100, -1, -10):
+        line = f"{i:>3}| "
+        for category in categories:
+            pct = percentages.get(category.name, 0)
+            if pct >= i:
+                line += "o  "
+            else:
+                line += "   "
+        chart_lines.append(line)
+
+    # Horizontal line: 3 dashes per category, 2 past final bar
+    dash_count = 3 * len(categories) + 1
+    chart_lines.append("    " + "-" * dash_count)
+
+    # Vertical category names - each line same length, 2 spaces between categories
+    for row in range(max_name_len):
+        line = "     "
+        for category in categories:
+            if row < len(category.name):
+                line += category.name[row] + "  "
+            else:
+                line += "   "
+        chart_lines.append(line)
+
+    return "\n".join(chart_lines)
